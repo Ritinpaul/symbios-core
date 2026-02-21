@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+torch
+pettingzoo
+gymnasium
+numpy
+scipy
+chromadb
+ollama
+web3
+pydantic
+python-dotenv
+pytest

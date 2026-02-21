@@ -1,0 +1,179 @@
+[
+    {
+        "id": "ie_001",
+        "title": "Waste Heat Recovery in Steel-Chemical Parks",
+        "content": "Steel mills generate excess heat at 300-600°C during blast furnace operations. Chemical plants require process heat at 150-400°C for distillation and cracking. Direct heat exchange via insulated pipelines can recover 40-60% of waste heat, reducing chemical plant energy costs by 25-35% and steel mill cooling costs by 15%.",
+        "feasibility_score": 0.92,
+        "risk_level": "low",
+        "resource_types": [
+            "HEAT"
+        ],
+        "source": "Journal of Industrial Ecology, 2023"
+    },
+    {
+        "id": "ie_002",
+        "title": "Slag Valorization in Cement Production",
+        "content": "Blast furnace slag from steel production contains calcium silicates that can replace 30-70% of Portland cement clinker. This reduces cement CO2 emissions by 40-50% per tonne and provides steel mills with revenue from a waste stream. Quality control requires monitoring slag basicity (CaO/SiO2 ratio > 1.0).",
+        "feasibility_score": 0.88,
+        "risk_level": "low",
+        "resource_types": [
+            "BYPRODUCT"
+        ],
+        "source": "Cement and Concrete Research, 2022"
+    },
+    {
+        "id": "ie_003",
+        "title": "Industrial Water Cascading",
+        "content": "High-purity cooling water from semiconductor plants can be cascaded to chemical processes requiring moderate purity, then to cooling towers, and finally to landscaping. This 4-stage cascade reduces total water intake by 60-70% in industrial parks with mixed water quality requirements.",
+        "feasibility_score": 0.85,
+        "risk_level": "medium",
+        "resource_types": [
+            "WATER"
+        ],
+        "source": "Water Research, 2023"
+    },
+    {
+        "id": "ie_004",
+        "title": "CO2 Capture and Utilization in Greenhouses",
+        "content": "Cement kilns emit CO2 at 15-25% concentration, ideal for greenhouse enrichment (target: 800-1200 ppm). After scrubbing SOx/NOx, captured CO2 can boost greenhouse crop yields by 20-30%. Carbon credit value: $25-50/tonne under EU ETS.",
+        "feasibility_score": 0.78,
+        "risk_level": "medium",
+        "resource_types": [
+            "CO2"
+        ],
+        "source": "Applied Energy, 2023"
+    },
+    {
+        "id": "ie_005",
+        "title": "Shared Energy Storage Systems",
+        "content": "Industrial parks with variable energy demand profiles can share battery storage (Li-ion or flow batteries) to reduce peak demand charges by 30-40%. Steel mills peak during day shifts while chemical plants often run 24/7, creating natural load balancing opportunities.",
+        "feasibility_score": 0.82,
+        "risk_level": "low",
+        "resource_types": [
+            "ENERGY",
+            "STORAGE"
+        ],
+        "source": "Energy Policy, 2023"
+    },
+    {
+        "id": "ie_006",
+        "title": "Fly Ash in Concrete Manufacturing",
+        "content": "Coal fly ash from power plants can replace 15-35% of cement in concrete mixes, improving workability and long-term strength. Class F fly ash (low calcium) is preferable. This diverts millions of tonnes from landfills annually while reducing concrete production costs by 10-20%.",
+        "feasibility_score": 0.90,
+        "risk_level": "low",
+        "resource_types": [
+            "BYPRODUCT"
+        ],
+        "source": "Construction and Building Materials, 2022"
+    },
+    {
+        "id": "ie_007",
+        "title": "Kalundborg Symbiosis Model",
+        "content": "The Kalundborg industrial symbiosis in Denmark demonstrates that a network of 12+ companies exchanging water, energy, and materials can save 635,000 tonnes of CO2 annually. Key success factors: geographic proximity (<5km), trust-based governance, and long-term contracts (10-15 years).",
+        "feasibility_score": 0.95,
+        "risk_level": "low",
+        "resource_types": [
+            "HEAT",
+            "WATER",
+            "BYPRODUCT",
+            "ENERGY"
+        ],
+        "source": "Journal of Cleaner Production, 2021"
+    },
+    {
+        "id": "ie_008",
+        "title": "Acid-Base Neutralization Exchanges",
+        "content": "Chemical plants producing acidic waste streams (pH 2-4) can exchange with plants producing alkaline waste (pH 10-12) for mutual neutralization, eliminating the need for purchased neutralizing agents. This saves both parties 40-60% on waste treatment costs.",
+        "feasibility_score": 0.75,
+        "risk_level": "medium",
+        "resource_types": [
+            "BYPRODUCT",
+            "WATER"
+        ],
+        "source": "Chemical Engineering Journal, 2023"
+    },
+    {
+        "id": "ie_009",
+        "title": "Compressed Air Network Sharing",
+        "content": "Industrial compressed air systems operate at 15-25% efficiency. Sharing a centralized, optimized compressor station among 3-5 factories can improve efficiency to 40-50% by eliminating individual oversized compressors and enabling waste heat recovery from compression.",
+        "feasibility_score": 0.80,
+        "risk_level": "low",
+        "resource_types": [
+            "ENERGY"
+        ],
+        "source": "Energy Conversion and Management, 2022"
+    },
+    {
+        "id": "ie_010",
+        "title": "Biogas from Food Processing Waste",
+        "content": "Organic waste from food processing can be anaerobically digested to produce biogas (60% CH4). A single food processing plant generating 10 tonnes/day of organic waste can supply 2,400 m3 of biogas daily, equivalent to 14.4 MWh of thermal energy for nearby factories.",
+        "feasibility_score": 0.83,
+        "risk_level": "medium",
+        "resource_types": [
+            "ENERGY",
+            "BYPRODUCT"
+        ],
+        "source": "Bioresource Technology, 2023"
+    },
+    {
+        "id": "ie_011",
+        "title": "Guindy Industrial Cluster Heat Network Potential",
+        "content": "The Guindy industrial area in Chennai hosts steel fabricators, chemical processors, and cement plants within a 3km radius. Modeling shows a potential 45% reduction in collective energy costs through heat integration networks, with payback periods of 2-3 years for pipeline infrastructure.",
+        "feasibility_score": 0.87,
+        "risk_level": "low",
+        "resource_types": [
+            "HEAT",
+            "ENERGY"
+        ],
+        "source": "SymbiOS Internal Analysis, 2024"
+    },
+    {
+        "id": "ie_012",
+        "title": "Circular Economy Carbon Credits",
+        "content": "Industrial symbiosis networks can generate verified carbon credits under Article 6 of the Paris Agreement. Each tonne of CO2 avoided through resource exchange is worth $15-80 depending on the market. Blockchain-verified MRV (Monitoring, Reporting, Verification) increases credit value by 20-30%.",
+        "feasibility_score": 0.70,
+        "risk_level": "medium",
+        "resource_types": [
+            "CO2"
+        ],
+        "source": "Nature Climate Change, 2023"
+    },
+    {
+        "id": "ie_013",
+        "title": "Solvent Recovery and Exchange Networks",
+        "content": "Chemical plants using similar solvents (e.g., toluene, acetone) can share distillation recovery units. Centralized solvent recovery serves 3-5 plants, achieving 85-95% recovery rates vs. 60-70% for individual on-site units, while reducing hazardous waste disposal costs by 50%.",
+        "feasibility_score": 0.76,
+        "risk_level": "high",
+        "resource_types": [
+            "BYPRODUCT"
+        ],
+        "source": "Green Chemistry, 2022"
+    },
+    {
+        "id": "ie_014",
+        "title": "Steam Network Optimization",
+        "content": "Multi-pressure steam networks (HP: 40 bar, MP: 10 bar, LP: 3 bar) between co-located factories enable cascade utilization. Steel mills provide HP steam, chemical plants use MP, and cement plants use LP for preheating. Total network efficiency can reach 75-85% vs. 45-55% standalone.",
+        "feasibility_score": 0.89,
+        "risk_level": "low",
+        "resource_types": [
+            "HEAT",
+            "ENERGY"
+        ],
+        "source": "Applied Thermal Engineering, 2023"
+    },
+    {
+        "id": "ie_015",
+        "title": "Digital Twin-Enabled Resource Matching",
+        "content": "AI-powered digital twins of industrial parks can identify non-obvious symbiotic links by simulating thousands of resource flow configurations. Studies show that ML-assisted matching discovers 30-40% more viable exchanges than expert-driven analysis alone.",
+        "feasibility_score": 0.80,
+        "risk_level": "low",
+        "resource_types": [
+            "HEAT",
+            "WATER",
+            "BYPRODUCT",
+            "ENERGY",
+            "CO2"
+        ],
+        "source": "Computers in Industry, 2023"
+    }
+]
