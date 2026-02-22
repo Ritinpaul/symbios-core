@@ -4,7 +4,7 @@ const links = [
   { icon: Github, label: 'GitHub', href: 'https://github.com/Ritinpaul/symbios-core', target: '_blank', rel: 'noopener noreferrer' },
   { icon: BookOpen, label: 'Docs', href: '#' },
   { icon: Mail, label: 'Email', href: '#' },
-  { icon: Video, label: 'Demo', href: '#' },
+  { icon: Video, label: 'Demo', href: 'https://drive.google.com/file/d/1XrNwnP4XEq4PA2zmYEDGA44X6lNbBGW8/view?usp=sharing', target: '_blank', rel: 'noopener noreferrer' },
 ];
 
 export default function ContactSection() {
