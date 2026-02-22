@@ -145,24 +145,43 @@ function SuggestionCard({ s }: { s: Suggestion }) {
 }
 
 // --- Blockchain Log ---
+const ETHERSCAN_BASE = 'https://sepolia.etherscan.io/address/';
+const isLiveAddress = (addr: string) => addr && !addr.startsWith('0x5FbDB') && !addr.startsWith('0xe7f1725') && addr.length === 42;
+
 function BlockchainPanel({ addresses }: { addresses: ContractAddresses }) {
-    const entries = Object.entries(addresses);
+    const entries = Object.entries(addresses).filter(([k]) => k !== 'error');
+    const hasLive = entries.some(([, addr]) => isLiveAddress(addr as string));
     return (
         <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 h-full">
             <h4 className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <Database className="w-3 h-3" /> Deployed Contracts
+                {hasLive && <span className="text-[8px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full">SEPOLIA LIVE</span>}
             </h4>
             <ScrollArea className="h-36">
                 {entries.length === 0 ? (
                     <p className="text-xs text-slate-500 font-mono">No contracts found — run deploy.js</p>
                 ) : (
                     <div className="space-y-2 font-mono text-[10px]">
-                        {entries.map(([name, addr]) => (
-                            <div key={name} className="border-l-2 border-violet-500/40 pl-2">
-                                <p className="text-violet-300 font-semibold">{name}</p>
-                                <p className="text-slate-400 truncate">{addr}</p>
-                            </div>
-                        ))}
+                        {entries.map(([name, addr]) => {
+                            const live = isLiveAddress(addr as string);
+                            return (
+                                <div key={name} className="border-l-2 border-violet-500/40 pl-2">
+                                    <p className="text-violet-300 font-semibold">{name}</p>
+                                    {live ? (
+                                        <a
+                                            href={`${ETHERSCAN_BASE}${addr}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 truncate block transition-colors"
+                                        >
+                                            {(addr as string).slice(0, 6)}…{(addr as string).slice(-4)} ↗
+                                        </a>
+                                    ) : (
+                                        <p className="text-slate-400 truncate">{addr as string}</p>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </ScrollArea>
