@@ -14,28 +14,40 @@ export interface SimulationLiveData {
   rewards: Record<string, number>;
   disruptions: Record<string, boolean>;
   done: boolean;
+  attention: Record<string, number[][]>;
+  narration: string;
   performanceHistory: PerformancePoint[];
 }
 
-/**
- * useWebSocket connects to our backend's /ws/simulation endpoint.
- * On open, immediately sends { "action": "auto", "steps": 999 } to start streaming.
- * Parses step_update messages and maintains running performance history.
- */
 export function useSimulation() {
   const [wsState, setWsState] = useState<WSState>('closed');
   const [liveData, setLiveData] = useState<SimulationLiveData | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false); // require manual start
+
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<ReturnType<typeof setTimeout>>();
   const reconnectAttempts = useRef(0);
   const historyRef = useRef<PerformancePoint[]>([]);
-  const maxReconnect = 5;
+  const maxReconnect = 8;
+
+  const sendCommand = useCallback((action: 'play' | 'pause') => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action }));
+    }
+  }, []);
+
+  const togglePlay = useCallback(() => {
+    setIsPlaying(p => {
+      const next = !p;
+      sendCommand(next ? 'play' : 'pause');
+      return next;
+    });
+  }, [sendCommand]);
 
   const connect = useCallback(() => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
     setWsState('connecting');
 
-    // Use window.location to support both dev proxy and production
     const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/simulation`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
@@ -43,8 +55,7 @@ export function useSimulation() {
     ws.onopen = () => {
       setWsState('open');
       reconnectAttempts.current = 0;
-      // Kick off auto-run
-      ws.send(JSON.stringify({ action: 'auto', steps: 999 }));
+      ws.send(JSON.stringify({ action: 'pause' }));
     };
 
     ws.onmessage = (event) => {
@@ -52,13 +63,11 @@ export function useSimulation() {
         const msg = JSON.parse(event.data);
         if (msg.type === 'step_update') {
           const stepNum = msg.step?.step ?? 0;
-          const avgReward =
-            Object.values(msg.step?.rewards ?? {}).length > 0
-              ? Object.values(msg.step.rewards as Record<string, number>).reduce((s, v) => s + v, 0) /
-              Object.values(msg.step.rewards as Record<string, number>).length
-              : 0;
+          const rewardValues = Object.values(msg.step?.rewards ?? {}) as number[];
+          const avgReward = rewardValues.length > 0
+            ? rewardValues.reduce((s, v) => s + v, 0) / rewardValues.length
+            : 0;
 
-          // Keep rolling 60-step history
           historyRef.current = [
             ...historyRef.current.slice(-59),
             { step: stepNum, reward: parseFloat(avgReward.toFixed(3)) },
@@ -70,6 +79,8 @@ export function useSimulation() {
             rewards: msg.step?.rewards ?? {},
             disruptions: msg.step?.disruptions ?? {},
             done: msg.step?.done ?? false,
+            attention: msg.attention ?? {},
+            narration: msg.narration ?? '',
             performanceHistory: [...historyRef.current],
           });
         }
@@ -111,5 +122,5 @@ export function useSimulation() {
     };
   }, [connect]);
 
-  return { wsState, liveData, reconnect };
+  return { wsState, liveData, isPlaying, togglePlay, reconnect };
 }

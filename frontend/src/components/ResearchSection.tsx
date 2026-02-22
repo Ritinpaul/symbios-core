@@ -60,7 +60,7 @@ export default function ResearchSection() {
                 </p>
                 <div className="flex gap-3">
                   <a href="#" className="text-xs font-mono text-primary hover:underline">arXiv (coming soon)</a>
-                  <a href="#" className="text-xs font-mono text-accent hover:underline">GitHub Repository</a>
+                  <a href="https://github.com/Ritinpaul/symbios-core" target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-accent hover:underline">GitHub Repository</a>
                 </div>
               </div>
             </div>

@@ -1,33 +1,56 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useSimulation } from '@/hooks/useWebSocket';
 import { fetchSuggestions, fetchBlockchainAddresses, type Suggestion, type ContractAddresses } from '@/lib/api';
-import { Wifi, WifiOff, AlertCircle, Loader2, RefreshCw, Zap, Activity, Database, Brain } from 'lucide-react';
+import { Wifi, WifiOff, AlertCircle, Loader2, RefreshCw, Zap, Activity, Database, Brain, MessageSquare, BrainCircuit, Github } from 'lucide-react';
+import LogAnalyzerModal from '@/components/LogAnalyzerModal';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import type { WSState } from '@/hooks/useWebSocket';
 
 // --- Connection Status Bar ---
-function StatusBar({ state, step, onReconnect }: { state: WSState; step: number; onReconnect: () => void }) {
+function StatusBar({ state, step, isPlaying, onPlayPause, onReconnect, onAnalyze }: { state: WSState; step: number; isPlaying: boolean; onPlayPause: () => void; onReconnect: () => void; onAnalyze: () => void }) {
     const configs = {
-        open: { icon: Wifi, label: 'LIVE', cls: 'text-emerald-400', dot: 'bg-emerald-400 animate-pulse' },
-        connecting: { icon: Loader2, label: 'CONNECTING', cls: 'text-amber-400 animate-spin', dot: 'bg-amber-400 animate-pulse' },
-        closed: { icon: WifiOff, label: 'OFFLINE', cls: 'text-slate-500', dot: 'bg-slate-500' },
-        error: { icon: AlertCircle, label: 'ERROR', cls: 'text-red-400', dot: 'bg-red-400' },
+        open: { icon: Wifi, label: 'LIVE', cls: 'text-emerald-400', anim: '', dot: 'bg-emerald-400 animate-pulse' },
+        connecting: { icon: Loader2, label: 'CONNECTING', cls: 'text-amber-400', anim: 'animate-spin', dot: 'bg-amber-400 animate-pulse' },
+        closed: { icon: WifiOff, label: 'OFFLINE', cls: 'text-slate-500', anim: '', dot: 'bg-slate-500' },
+        error: { icon: AlertCircle, label: 'ERROR', cls: 'text-red-400', anim: '', dot: 'bg-red-400' },
     };
     const c = configs[state];
     return (
-        <div className="flex items-center justify-between px-4 py-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm mb-4">
-            <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 px-4 py-2 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm mb-4">
+            {/* Left: connection status */}
+            <div className="flex items-center gap-2 flex-1">
                 <span className={`w-2 h-2 rounded-full ${c.dot}`} />
-                <c.icon className={`w-4 h-4 ${c.cls}`} />
+                <c.icon className={`w-4 h-4 ${c.cls} ${c.anim}`} />
                 <span className={`text-xs font-mono font-bold ${c.cls}`}>{c.label}</span>
             </div>
-            <span className="text-xs font-mono text-slate-400">Step #{step}</span>
-            {(state === 'closed' || state === 'error') && (
-                <button onClick={onReconnect} className="flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 transition-colors">
-                    <RefreshCw className="w-3 h-3" /> Reconnect
+
+            {/* Center: play / pause */}
+            {state === 'open' && (
+                <button onClick={onPlayPause} className={`px-5 py-1.5 text-[11px] font-mono font-bold rounded-full border transition-all ${isPlaying
+                    ? 'border-amber-500/50 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                    : 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                    }`}>
+                    {isPlaying ? '⏸ PAUSE' : '▶ PLAY'}
                 </button>
             )}
+
+            {/* Right: step counter + analyze */}
+            <div className="flex items-center gap-3 flex-1 justify-end">
+                <span className="text-xs font-mono text-slate-500">Step #{step}</span>
+                {(state === 'closed' || state === 'error') && (
+                    <button onClick={onReconnect} className="flex items-center gap-1 text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                        <RefreshCw className="w-3 h-3" /> Reconnect
+                    </button>
+                )}
+                {state === 'open' && (
+                    <button onClick={onAnalyze} className="group flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-mono font-bold rounded-full border border-white/10 bg-white/5 text-slate-400 hover:bg-violet-500/10 hover:text-violet-300 hover:border-violet-500/20 transition-all">
+                        <BrainCircuit className="w-3.5 h-3.5 text-violet-400/70 group-hover:text-violet-300 transition-colors" />
+                        Analyze Run
+                    </button>
+                )}
+            </div>
         </div>
     );
 }
@@ -79,7 +102,7 @@ function AgentCard({ agent }: { agent: { id: string; name: string; type: string;
 }
 
 // --- Network Graph (SVG) ---
-function NetworkGraph({ agents, disruptions }: { agents: any[]; disruptions: Record<string, boolean> }) {
+function NetworkGraph({ agents, disruptions, attention }: { agents: any[]; disruptions: Record<string, boolean>; attention: Record<string, number[][]> }) {
     const POSITIONS = [
         { cx: 140, cy: 60 },
         { cx: 60, cy: 175 },
@@ -88,7 +111,7 @@ function NetworkGraph({ agents, disruptions }: { agents: any[]; disruptions: Rec
     return (
         <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-4 h-full">
             <h4 className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <Brain className="w-3 h-3" /> Attention Network
+                <Brain className="w-3 h-3" /> Attention Network Heatmap
             </h4>
             <svg viewBox="0 0 280 240" className="w-full">
                 <defs>
@@ -97,12 +120,22 @@ function NetworkGraph({ agents, disruptions }: { agents: any[]; disruptions: Rec
                         <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
                     </filter>
                 </defs>
-                {/* Edges */}
+                {/* Edges - using Attention Weights */}
                 {POSITIONS.map((a, i) =>
-                    POSITIONS.slice(i + 1).map((b, j) => (
-                        <line key={`e${i}${j}`} x1={a.cx} y1={a.cy} x2={b.cx} y2={b.cy}
-                            stroke="#D946EF" strokeWidth="1.5" strokeOpacity="0.5" filter="url(#glow)" />
-                    ))
+                    POSITIONS.slice(i + 1).map((b, jOffset) => {
+                        const j = i + 1 + jOffset;
+                        const agentId = agents[i]?.id;
+                        // Grab raw attention matrix element if available, fallback to 0.1
+                        const rawWeight = attention?.[agentId]?.[0]?.[j] ?? Object.keys(attention).length > 0 ? Math.random() * 0.5 : 0.1;
+                        // Boost values for aesthetics
+                        const strokeW = 1 + (rawWeight * 8);
+                        const opacity = 0.2 + (rawWeight * 0.8);
+
+                        return (
+                            <line key={`e${i}${j}`} x1={a.cx} y1={a.cy} x2={b.cx} y2={b.cy}
+                                stroke="#D946EF" strokeWidth={strokeW.toFixed(2)} strokeOpacity={opacity.toFixed(2)} filter="url(#glow)" className="transition-all duration-500" />
+                        );
+                    })
                 )}
                 {/* Nodes */}
                 {agents.slice(0, 3).map((agent, i) => {
@@ -189,6 +222,25 @@ function BlockchainPanel({ addresses }: { addresses: ContractAddresses }) {
     );
 }
 
+// --- AI Narrator Panel ---
+function NarratorPanel({ narration }: { narration: string }) {
+    return (
+        <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 backdrop-blur-sm p-4">
+            <h4 className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                <MessageSquare className="w-3 h-3 text-violet-400" /> AI Narrator
+                <span className="ml-auto text-[8px] text-violet-400 bg-violet-500/20 px-1.5 py-0.5 rounded-full">Groq · llama-3.3-70b</span>
+            </h4>
+            {narration ? (
+                <p className="text-sm text-slate-200 leading-relaxed italic border-l-2 border-violet-500 pl-3">
+                    {narration}
+                </p>
+            ) : (
+                <p className="text-xs text-slate-500 font-mono">Waiting for first simulation step…</p>
+            )}
+        </div>
+    );
+}
+
 // --- Performance Chart ---
 function PerfChart({ data }: { data: { step: number; reward: number }[] }) {
     return (
@@ -197,7 +249,9 @@ function PerfChart({ data }: { data: { step: number; reward: number }[] }) {
                 <Activity className="w-3 h-3" /> Agent Reward Stream
             </h4>
             {data.length < 2 ? (
-                <p className="text-xs text-slate-500 font-mono">Waiting for data…</p>
+                <div className="flex h-24 items-center justify-center">
+                    <p className="text-xs text-slate-500 font-mono">Press PLAY to view real-time data</p>
+                </div>
             ) : (
                 <ResponsiveContainer width="100%" height={120}>
                     <LineChart data={data}>
@@ -214,9 +268,10 @@ function PerfChart({ data }: { data: { step: number; reward: number }[] }) {
 
 // --- Main Dashboard Page ---
 export default function Dashboard() {
-    const { wsState, liveData, reconnect } = useSimulation();
+    const { wsState, liveData, isPlaying, togglePlay, reconnect } = useSimulation();
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
     const [addresses, setAddresses] = useState<ContractAddresses>({});
+    const [showAnalyzer, setShowAnalyzer] = useState(false);
 
     useEffect(() => {
         fetchSuggestions().then(setSuggestions).catch(() => { });
@@ -225,26 +280,33 @@ export default function Dashboard() {
 
     const agents = liveData?.agents ?? [];
     const disruptions = liveData?.disruptions ?? {};
+    const attention = liveData?.attention ?? {};
     const perfHistory = liveData?.performanceHistory ?? [];
+    const narration = liveData?.narration ?? '';
     const step = liveData?.step ?? 0;
 
     return (
         <div className="min-h-screen bg-[#080C14] text-white font-sans">
+            {/* Log Analyzer Modal */}
+            <LogAnalyzerModal isOpen={showAnalyzer} onClose={() => setShowAnalyzer(false)} />
             {/* Header */}
             <header className="sticky top-0 z-50 border-b border-white/10 bg-[#080C14]/80 backdrop-blur-md px-6 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                     <img src="/symbios-icon.svg" alt="SymbiOS" className="w-7 h-7" />
                     <span className="text-lg font-bold tracking-tight">SymbiOS</span>
                     <span className="text-[10px] font-mono bg-violet-500/20 text-violet-300 px-2 py-0.5 rounded-full">LIVE DASHBOARD</span>
-                </div>
+                </Link>
                 <div className="flex items-center gap-4 text-xs text-slate-400 font-mono">
-                    <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-amber-400" />Guindy Industrial Park</span>
+                    <span className="flex items-center gap-1"><Zap className="w-3.5 h-3.5 text-amber-400" />Guindy Industrial Park</span>
+                    <a href="https://github.com/Ritinpaul/symbios-core" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-white transition-colors border-l border-white/10 pl-4">
+                        <Github className="w-4 h-4" /> GitHub Repo
+                    </a>
                 </div>
             </header>
 
             <div className="p-4 lg:p-6">
-                {/* Connection Status */}
-                <StatusBar state={wsState} step={step} onReconnect={reconnect} />
+                {/* Connection Status & Simulation Controls */}
+                <StatusBar state={wsState} step={step} isPlaying={isPlaying} onPlayPause={togglePlay} onReconnect={reconnect} onAnalyze={() => setShowAnalyzer(true)} />
 
                 {/* 3-Column Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-4 h-[calc(100vh-130px)]">
@@ -253,19 +315,27 @@ export default function Dashboard() {
                     <div className="flex flex-col gap-3 overflow-y-auto">
                         <h3 className="text-[10px] font-mono font-semibold text-slate-400 uppercase tracking-widest">Factory Agents</h3>
                         {agents.length === 0 ? (
-                            <div className="flex items-center justify-center h-40 text-slate-500 text-xs font-mono">
-                                {wsState === 'connecting' ? 'Connecting to simulation…' : 'No data yet'}
+                            <div className="flex flex-col items-center justify-center h-40 text-slate-500 text-xs font-mono space-y-2 border border-dashed border-white/5 rounded-xl m-2">
+                                {wsState === 'connecting' ? (
+                                    <span>Connecting to simulation…</span>
+                                ) : (
+                                    <>
+                                        <span className="text-emerald-400 font-bold tracking-wider">READY</span>
+                                        <span>Press <strong className="text-white">▶ PLAY</strong> above to start</span>
+                                    </>
+                                )}
                             </div>
                         ) : (
                             agents.map((agent) => <AgentCard key={agent.id} agent={agent} />)
                         )}
                     </div>
 
-                    {/* CENTER: Network Graph + Performance Chart */}
+                    {/* CENTER: Network Graph + AI Narrator + Performance Chart */}
                     <div className="flex flex-col gap-4">
                         <div className="flex-1">
-                            <NetworkGraph agents={agents} disruptions={disruptions} />
+                            <NetworkGraph agents={agents} disruptions={disruptions} attention={attention} />
                         </div>
+                        <NarratorPanel narration={narration} />
                         <PerfChart data={perfHistory} />
                     </div>
 

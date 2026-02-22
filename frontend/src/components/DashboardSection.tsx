@@ -210,6 +210,13 @@ export default function DashboardSection() {
             </div>
           )}
         </div>
+
+        <div className="mt-8 flex justify-center">
+          <a href="/dashboard" className="gradient-btn inline-flex items-center gap-2.5 rounded-xl text-sm px-8 py-3.5 shadow-lg shadow-primary/20">
+            Go to Live Dashboard
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+          </a>
+        </div>
       </div>
     </section>
   );

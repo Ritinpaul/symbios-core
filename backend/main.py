@@ -1,15 +1,18 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, File
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import json
 import asyncio
 import numpy as np
+import csv
 
 from config import settings
 from simulation.scenarios import setup_guindy_industrial_park
 from simulation.resource_types import ResourceType
 from marl.mappo import TransformerMAPPO
 from genai.suggestion_engine import SuggestionEngine
+from genai.log_analyzer import analyze_simulation_log
 
 # Global state
 app_state = {}
@@ -25,6 +28,11 @@ async def lifespan(app: FastAPI):
     app_state["env"] = env
     app_state["obs"] = obs
     app_state["step_count"] = 0
+    
+    # Init blank CSV log 
+    with open("narrations_log.csv", "w", encoding="utf-8", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Step", "Narration"])
     
     # 2. Init MARL
     obs_dim = env.observation_space(env.possible_agents[0]).shape[0]
@@ -58,6 +66,23 @@ app.add_middleware(
 async def root():
     return {"project": settings.PROJECT_NAME, "version": settings.API_VERSION, "status": "running"}
 
+@app.get("/api/simulation/download-log")
+async def download_narration_log():
+    """Download the current narration log CSV file."""
+    import os
+    log_path = os.path.join(os.path.dirname(__file__), "narrations_log.csv")
+    if not os.path.exists(log_path):
+        return {"error": "No narration log found. Run the simulation first."}
+    return FileResponse(log_path, media_type="text/csv", filename="narrations_log.csv")
+
+@app.post("/api/simulation/analyze-log")
+async def analyze_log(file: UploadFile = File(...)):
+    """Upload a narration log CSV and get an AI-generated executive summary."""
+    content = await file.read()
+    log_text = content.decode("utf-8")
+    analysis = await analyze_simulation_log(log_text)
+    return {"analysis": analysis}
+
 @app.get("/api/agents")
 async def get_agents():
     """Return current state of all factory agents."""
@@ -69,11 +94,11 @@ async def get_agents():
             "id": fa.agent_id,
             "name": fa.name,
             "type": fa.type.value,
-            "cash": round(fa.cash, 2),
-            "reputation": round(fa.reputation, 3),
-            "production_schedule": round(fa.production_schedule, 3),
-            "inventory": {r.name: round(fa.inventory[r], 2) for r in ResourceType},
-            "attention_memory": list(fa.attention_memory)
+            "cash": float(round(fa.cash, 2)),
+            "reputation": float(round(fa.reputation, 3)),
+            "production_schedule": float(round(fa.production_schedule, 3)),
+            "inventory": {r.name: float(round(fa.inventory[r], 2)) for r in ResourceType},
+            "attention_memory": [float(x) for x in fa.attention_memory]
         })
     return {"agents": agents}
 
@@ -85,11 +110,10 @@ async def simulation_step():
     obs = app_state["obs"]
     
     # Check if episode is done
-    if not env.agents:
+    if getattr(env, "agents", []) == [] or not env.agents:
         obs, info = env.reset()
         app_state["obs"] = obs
-        app_state["step_count"] = 0
-        return {"status": "reset", "message": "Episode done. Environment reset."}
+        # Seamlessly continue to the next episode without resetting global step count
     
     # Get MARL actions
     actions, log_probs, values = model.get_actions(obs)
@@ -122,9 +146,9 @@ async def get_simulation_state():
             "id": fa.agent_id,
             "name": fa.name,
             "type": fa.type.value,
-            "cash": round(fa.cash, 2),
-            "reputation": round(fa.reputation, 3),
-            "inventory": {r.name: round(fa.inventory[r], 2) for r in ResourceType}
+            "cash": float(round(fa.cash, 2)),
+            "reputation": float(round(fa.reputation, 3)),
+            "inventory": {r.name: float(round(fa.inventory[r], 2)) for r in ResourceType}
         })
     
     return {
@@ -171,6 +195,8 @@ async def get_blockchain_addresses():
 
 # --- WEBSOCKET FOR LIVE STREAMING ---
 
+from genai.narrator import generate_narration
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -180,50 +206,106 @@ class ConnectionManager:
         self.active_connections.append(websocket)
     
     def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+    
+    async def send_to(self, websocket: WebSocket, message: dict):
+        try:
+            await websocket.send_json(message)
+        except Exception:
+            self.disconnect(websocket)
     
     async def broadcast(self, message: dict):
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-            except Exception:
-                pass
+        for connection in list(self.active_connections):
+            await self.send_to(connection, message)
 
 manager = ConnectionManager()
 
+def _snapshot_agents() -> list[dict]:
+    """Return a lightweight snapshot of all factory agents."""
+    env = app_state["env"]
+    result = []
+    for agent_id in env.possible_agents:
+        fa = env.factory_agents[agent_id]
+        result.append({
+            "id": fa.agent_id,
+            "name": fa.name,
+            "cash": float(round(fa.cash, 2)),
+            "inventory": {r.name: float(round(fa.inventory[r], 2)) for r in ResourceType}
+        })
+    return result
+
 @app.websocket("/ws/simulation")
 async def websocket_simulation(websocket: WebSocket):
-    """WebSocket endpoint for real-time simulation streaming."""
+    """WebSocket endpoint for real-time simulation streaming.
+    
+    The SERVER drives the simulation loop — pushes updates at 1.2s intervals.
+    The CLIENT can send: {"action": "pause"} or {"action": "play"} to control it.
+    """
     await manager.connect(websocket)
+    is_playing = True  # Start playing immediately
+    
+    async def listen_for_commands():
+        nonlocal is_playing
+        try:
+            while True:
+                raw = await websocket.receive_text()
+                cmd = json.loads(raw)
+                if cmd.get("action") == "pause":
+                    is_playing = False
+                elif cmd.get("action") == "play":
+                    is_playing = True
+        except Exception:
+            pass
+    
+    # Run command listener in background
+    listener_task = asyncio.create_task(listen_for_commands())
+    
     try:
-        while True:
-            # Wait for client message (e.g., "step" or "auto")
-            data = await websocket.receive_text()
-            command = json.loads(data)
-            
-            if command.get("action") == "step":
-                # Execute one step and broadcast
-                step_result = await simulation_step()
-                agents_result = await get_agents()
-                
-                await manager.broadcast({
-                    "type": "step_update",
-                    "step": step_result,
-                    "agents": agents_result["agents"]
-                })
-            
-            elif command.get("action") == "auto":
-                # Auto-run N steps
-                n_steps = command.get("steps", 5)
-                for _ in range(n_steps):
+        while websocket in manager.active_connections:
+            if is_playing:
+                agents_before = _snapshot_agents()
+                try:
                     step_result = await simulation_step()
                     agents_result = await get_agents()
-                    await manager.broadcast({
+                    attention_result = await get_attention_weights()
+                except Exception as e:
+                    if websocket in manager.active_connections:
+                        await manager.send_to(websocket, {"type": "error", "message": str(e)})
+                    await asyncio.sleep(1.2)
+                    continue
+                
+                if websocket not in manager.active_connections:
+                    break
+
+                agents_after = _snapshot_agents()
+                
+                # Generate AI narration (non-blocking)
+                current_step = step_result.get("step", 0)
+                narration = await generate_narration(
+                    step=current_step,
+                    agents_before=agents_before,
+                    agents_after=agents_after,
+                    disruptions=step_result.get("disruptions", {})
+                )
+                
+                # Append to CSV log
+                with open("narrations_log.csv", "a", encoding="utf-8", newline="") as f:
+                    writer = csv.writer(f)
+                    writer.writerow([current_step, narration])
+                
+                if websocket in manager.active_connections:
+                    await manager.send_to(websocket, {
                         "type": "step_update",
                         "step": step_result,
-                        "agents": agents_result["agents"]
+                        "agents": agents_result["agents"],
+                        "attention": attention_result["attention_weights"],
+                        "narration": narration,
                     })
-                    await asyncio.sleep(0.5)  # Pace for UI
-                    
-    except WebSocketDisconnect:
+            
+            await asyncio.sleep(1.2)  # 1.2s per step
+    except Exception:
+        pass
+    finally:
+        listener_task.cancel()
         manager.disconnect(websocket)

@@ -61,17 +61,32 @@ class FactoryAgent:
             # Slowly recover normal production schedule
             self.production_schedule = min(1.0, self.production_schedule + 0.1)
         
-        # TODO: Implement concrete resource generation/consumption based on self.type
-        pass
+        import random
+        # Base generation/consumption
+        for r in ResourceType:
+            if self.type == AgentType.PRODUCER:
+                self.inventory[r] = min(self.capacity.get(r, 100.0), self.inventory[r] + random.uniform(2, 8) * self.production_schedule)
+            elif self.type == AgentType.CONSUMER:
+                self.inventory[r] = max(0.0, self.inventory[r] - random.uniform(2, 8) * self.production_schedule)
+            else:
+                 # Converter fluctuates
+                 self.inventory[r] = max(0.0, min(self.capacity.get(r, 100.0), self.inventory[r] + random.uniform(-5, 5) * self.production_schedule))
 
     def apply_action(self, action: np.ndarray) -> None:
         """
         Translates raw ND array action to concrete effects.
         Action vector (dim 6): [bid_price_mod, ask_price_mod, accept_threshold, negotiation_partner_focus, contract_duration, quality_tier]
         """
-        # In a real environment, this would set local state to prepare for negotiation phase
-        # The extra dimensions (duration, quality) make the deals more realistic
-        pass
+        import random
+        # Fake logic to simulate trading impacts on inventory and cash
+        trade_volume = (action[0] + 1.0) * 10 * self.production_schedule # 0 to 20
+        profit_loss = (action[1] * 50) - 10 # random profit
+        self.cash += profit_loss
+
+        # Randomly adjust inventory to simulate active P2P trades
+        for r in ResourceType:
+            change = random.uniform(-15, 15) * self.production_schedule
+            self.inventory[r] = max(0.0, min(self.capacity.get(r, 100.0), self.inventory[r] + change))
         
     def calculate_reward(self, profit: float, risk_factor: float) -> float:
         """

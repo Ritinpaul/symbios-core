@@ -1,7 +1,7 @@
 import { ArrowRight, Github, BookOpen, Mail, Video } from 'lucide-react';
 
 const links = [
-  { icon: Github, label: 'GitHub', href: '#' },
+  { icon: Github, label: 'GitHub', href: 'https://github.com/Ritinpaul/symbios-core', target: '_blank', rel: 'noopener noreferrer' },
   { icon: BookOpen, label: 'Docs', href: '#' },
   { icon: Mail, label: 'Email', href: '#' },
   { icon: Video, label: 'Demo', href: '#' },
@@ -35,6 +35,8 @@ export default function ContactSection() {
               <a
                 key={i}
                 href={l.href}
+                target={l.target}
+                rel={l.rel}
                 className="w-11 h-11 rounded-xl bg-secondary/40 border border-border/30 flex items-center justify-center group hover:border-primary/25 transition-all duration-200"
                 title={l.label}
               >

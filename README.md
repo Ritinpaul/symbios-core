@@ -1,89 +1,139 @@
-# SymbiOS 🌍💻
+# SymbiOS
 
-> **Autonomous Industrial Symbiosis Operating System**
+**Autonomous Industrial Symbiosis Operating System**
 
-SymbiOS is a revolutionary, AI-driven digital infrastructure for industrial parks. It transforms isolated factories into a highly efficient, interconnected ecosystem where waste from one factory becomes the raw material for another. 
+SymbiOS is an AI-driven platform that transforms isolated factories into an interconnected circular economy. It autonomously discovers, negotiates, prices, and executes resource trades between industrial agents — turning one factory's waste into another's raw material, in real-time, with blockchain-verified settlement.
 
-By utilizing **Multi-Agent Reinforcement Learning (MARL)**, **Generative AI**, **Graph Neural Networks (GNN)**, and **Blockchain Smart Contracts**, SymbiOS optimizes resource flows, reduces carbon emissions, and ensures trustless, verifiable execution of industrial trades.
+> *From 1972 manual coordination (Kalundborg, Denmark) to 2026 AI-driven sustainability.*
 
----
-
-## 🧠 Core Architecture (5-Layer Tech Stack)
-
-SymbiOS is built on a cutting-edge 5-layer architecture designed for maximum efficiency and academic rigor:
-
-### 1. Simulation Engine (Layer 1)
-A high-fidelity physics simulator modeling factories as agents with dynamic inventories, capacities, and production schedules. Features **Attention Memory** and **Stochastic Disruptions** to simulate real-world supply chain shocks.
-
-### 2. MARL Training Engine (Layer 2)
-Powered by a custom **Transformer-MAPPO (Multi-Agent Proximal Policy Optimization)** algorithm. Instead of standard MLPs, agents use a 2-layer, 4-head Transformer encoder to weigh the "attention" of other factories in the network before making trade decisions. Includes Priority Experience Replay and Curriculum Learning.
-
-### 3. Economic Optimization Engine (Layer 3)
-A suite of game-theory mechanisms to ensure fairness and liquidity:
-*   **Nash Bargaining Solution:** Calculates the mathematically optimal midpoint for bilateral negotiations, maximizing the utility product for both parties.
-*   **Double Auctions & Market Makers:** An automated order book with an AI liquidity provider to clear trades instantly.
-*   **Predictive Dynamic Pricing:** Prices adjust based on supply/demand elasticity, seasonal trends, carbon taxes, and MARL-driven forecasts.
-
-### 4. Blockchain Smart Contracts (Layer 4)
-Built with Solidity and deployed via Hardhat to ensure trustless settlement:
-*   **Atomic Swaps (`NegotiationContract.sol`):** Funds are locked in escrow and released simultaneously upon delivery.
-*   **Mock IoT Oracle (`DeliveryContract.sol`):** Verifies physical delivery of resources completely off-chain before triggering the smart contract execution.
-*   **Soulbound Tokens (`ReputationContract.sol`):** Non-transferable ERC-721 NFTs that permanently record a factory's reliability score on-chain.
-
-### 5. GenAI Suggestion Engine (Layer 5)
-An intelligence layer that identifies non-obvious resource trades:
-*   **Hybrid RAG Pipeline:** Combines BM25 (sparse) and ChromaDB (dense vector) search utilizing Reciprocal Rank Fusion to retrieve industrial ecology case studies. 
-*   **GNN Graph Analyzer:** Uses PyTorch Geometric (Graph Autoencoders) to predict unseen symbiotic links across the factory network.
-*   **Confidence Scorer:** Outputs actionable JSON suggestions with a mathematically derived confidence score based on feasibility, risk, and expected economic ROI.
+**Theme:** Sustainable & Green Industrial Systems  
+**Repository:** [github.com/Ritinpaul/symbios-core](https://github.com/Ritinpaul/symbios-core)
 
 ---
 
-## 🚀 Getting Started
+## The Problem
 
-### 1. Backend (Python/FastAPI Engine)
-The core intelligence runs on Python.
+Industrial parks produce millions of tons of recyclable waste annually — heat, slag, chemicals, water — that gets dumped because neighboring factories don't coordinate. The world's best example of industrial symbiosis ([Kalundborg](https://en.wikipedia.org/wiki/Kalundborg_Eco-industrial_Park)) took 50 years of human negotiation. It doesn't scale.
 
+## The Solution
+
+SymbiOS automates industrial symbiosis through a 5-layer AI stack:
+
+1. **Simulation Engine** — Physics-based environment modeling factories as autonomous agents with dynamic inventories, production schedules, and stochastic disruptions.
+
+2. **MARL Training Engine** — Transformer-MAPPO (Multi-Agent Proximal Policy Optimization) with a 2-layer, 4-head attention encoder. Agents learn optimal trading strategies through experience, not hard-coded rules.
+
+3. **Economic Optimization** — Nash bargaining, double auctions with AI market makers, dynamic pricing with carbon-tax adjustment, and on-chain reputation scoring.
+
+4. **Blockchain Settlement** — Solidity smart contracts on Ethereum for escrow-based atomic swaps, IoT-verified delivery, and soulbound reputation NFTs (ERC-721).
+
+5. **GenAI Intelligence** — Hybrid RAG (BM25 + ChromaDB), GNN-based link prediction (PyTorch Geometric), real-time LLM narration, and AI log analysis via Groq.
+
+---
+
+## Live Dashboard
+
+A real-time React dashboard connected via WebSocket:
+
+- Live agent metrics (cash, inventory, reputation)
+- Attention network heatmap with weighted SVG links  
+- Performance history charts
+- AI-generated narration of every trade
+- GenAI trade suggestions with confidence scores
+- Blockchain contract status
+- Log analysis engine (upload CSV → executive summary)
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    FRONTEND (React + Vite)                   │
+│        Dashboard · Charts · Heatmap · AI Narrator           │
+├──────────────────────┬──────────────────────────────────────┤
+│    WebSocket /ws     │         REST /api                     │
+├──────────────────────┴──────────────────────────────────────┤
+│                  BACKEND (FastAPI + Python)                   │
+│                                                               │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────────┐ │
+│  │Simulation│  │   MARL   │  │Economics │  │   GenAI     │ │
+│  │  Engine  │  │ T-MAPPO  │  │  Engine  │  │  Engine     │ │
+│  └──────────┘  └──────────┘  └──────────┘  └─────────────┘ │
+├─────────────────────────────────────────────────────────────┤
+│              BLOCKCHAIN (Hardhat + Solidity)                  │
+│  NegotiationContract · DeliveryContract · ReputationNFT      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|-------------|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Recharts, Lucide Icons |
+| Backend | Python, FastAPI, WebSocket, NumPy |
+| AI/ML | PyTorch, PyTorch Geometric, Transformer-MAPPO |
+| GenAI | Groq (llama-3.3-70b), ChromaDB, BM25, Reciprocal Rank Fusion |
+| Blockchain | Solidity, Hardhat, Ethers.js, ERC-20, ERC-721 |
+
+---
+
+## Getting Started
+
+### Backend
 ```bash
 cd backend
-
-# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-pip install torch torch-geometric
-
-# Run the unified REST / WebSocket Server
-fastapi dev main.py
+uvicorn main:app --port 8001
 ```
 
-### 2. Blockchain (Hardhat)
-The trust layer runs on standard EVM tooling.
-
+### Blockchain
 ```bash
 cd blockchain
-
-# Install dependencies
 npm install
-
-# Compile contracts
 npx hardhat compile
-
-# Deploy to local testnet (spins up node and deploys instantaneously)
-npx hardhat node
-npx hardhat run scripts/deploy.js --network localhost
+npx hardhat node                                    # Terminal 1
+npx hardhat run scripts/deploy.js --network localhost  # Terminal 2
 ```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm run dev -- --port 8080
+```
+
+Open `http://localhost:8080` to access the dashboard.
 
 ---
 
-## 🧪 Evaluation & Testing
-To run the comprehensive end-to-end evaluation suite that sequentially tests the Simulation, MARL, Economics, Blockchain, and GenAI components:
+## Impact
+
+| Metric | Projected Impact |
+|--------|-----------------|
+| Resource savings | 20–30% raw material reduction |
+| Carbon reduction | Waste-to-resource conversion eliminates landfill emissions |
+| Water efficiency | Cross-factory reuse reduces freshwater consumption |
+| Settlement trust | 100% blockchain-verified, zero counterparty risk |
+| Coordination speed | Real-time autonomous (vs. decades of manual effort) |
+
+---
+
+## Evaluation
 
 ```bash
 cd backend
 python evaluate_progress.py
 ```
 
+Runs the end-to-end test suite across Simulation, MARL, Economics, Blockchain, and GenAI.
+
 ---
 
+## License
+
+MIT
