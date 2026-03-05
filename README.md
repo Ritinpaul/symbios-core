@@ -2,7 +2,7 @@
 
 **Autonomous Industrial Symbiosis Operating System**
 
-SymbiOS is an AI-driven platform that transforms isolated factories into an interconnected circular economy. It autonomously discovers, negotiates, prices, and executes resource trades between industrial agents — turning one factory's waste into another's raw material, in real-time, with blockchain-verified settlement.
+SymbiOS is an AI-driven platform that transforms isolated factories into an interconnected circular economy. It autonomously discovers, negotiates, prices, and executes resource trades between industrial agents: turning one factory's waste into another's raw material, in real-time, with blockchain-verified settlement.
 
 > *From 1972 manual coordination (Kalundborg, Denmark) to 2026 AI-driven sustainability.*
 
